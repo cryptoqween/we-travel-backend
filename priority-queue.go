@@ -3,13 +3,12 @@ package main
 
 import (
 	"container/heap"
-	"fmt"
 )
 
 // An Item is something we manage in a priority queue.
 type Item struct {
-	Value    *Node // The value of the item; arbitrary.
-	Priority int   // The priority of the item in the queue.
+	Value    *QueueItem // The value of the item; arbitrary.
+	Priority float64    // The priority of the item in the queue.
 	// The index is needed by update and is maintained by the heap.Interface methods.
 	Index int // The index of the item in the heap.
 }
@@ -20,8 +19,8 @@ type PriorityQueue []*Item
 func (pq PriorityQueue) Len() int { return len(pq) }
 
 func (pq PriorityQueue) Less(i, j int) bool {
-	// We want Pop to give us the highest, not lowest, priority so we use greater than here.
-	return pq[i].Priority > pq[j].Priority
+	// We want Pop to give us the lowest
+	return pq[i].Priority < pq[j].Priority
 }
 
 func (pq PriorityQueue) Swap(i, j int) {
@@ -48,7 +47,7 @@ func (pq *PriorityQueue) Pop() interface{} {
 }
 
 // update modifies the priority and value of an Item in the queue.
-func (pq *PriorityQueue) update(item *Item, value *Node, priority int) {
+func (pq *PriorityQueue) update(item *Item, value *QueueItem, priority float64) {
 	item.Value = value
 	item.Priority = priority
 	heap.Fix(pq, item.Index)
@@ -56,42 +55,42 @@ func (pq *PriorityQueue) update(item *Item, value *Node, priority int) {
 
 // This example creates a PriorityQueue with some items, adds and manipulates an item,
 // and then removes the items in priority order.
-func test() {
-	// Some items and their priorities.
-	var coords = Coordinate{1.0, 1.0}
-	var node3 = CreateNode(coords)
+// func test() {
+// 	// Some items and their priorities.
+// 	var coords = Coordinate{1.0, 1.0}
+// 	var QueueItem3 = CreateNode(coords)
 
-	items := map[int]Node{
-		3: node3,
-		2: node3,
-		4: node3,
-	}
+// 	items := map[int]Node{
+// 		3: node3,
+// 		2: node3,
+// 		4: node3,
+// 	}
 
-	// Create a priority queue, put the items in it, and
-	// establish the priority queue (heap) invariants.
-	pq := make(PriorityQueue, len(items))
-	i := 0
-	for priority, value := range items {
-		pq[i] = &Item{
-			Value:    &value,
-			Priority: priority,
-			Index:    i,
-		}
-		i++
-	}
-	heap.Init(&pq)
+// 	// Create a priority queue, put the items in it, and
+// 	// establish the priority queue (heap) invariants.
+// 	pq := make(PriorityQueue, len(items))
+// 	i := 0
+// 	for priority, value := range items {
+// 		pq[i] = &Item{
+// 			Value:    &value,
+// 			Priority: priority,
+// 			Index:    i,
+// 		}
+// 		i++
+// 	}
+// 	heap.Init(&pq)
 
-	// Insert a new item and then modify its priority.
-	item := &Item{
-		Value:    &node3,
-		Priority: 1,
-	}
-	heap.Push(&pq, item)
-	pq.update(item, item.Value, 5)
+// 	// Insert a new item and then modify its priority.
+// 	item := &Item{
+// 		Value:    &node3,
+// 		Priority: 1,
+// 	}
+// 	heap.Push(&pq, item)
+// 	pq.update(item, item.Value, 5)
 
-	// Take the items out; they arrive in decreasing priority order.
-	for pq.Len() > 0 {
-		item := heap.Pop(&pq).(*Item)
-		fmt.Printf("%.2d:%s ", item.Priority, item.Value)
-	}
-}
+// 	// Take the items out; they arrive in decreasing priority order.
+// 	for pq.Len() > 0 {
+// 		item := heap.Pop(&pq).(*Item)
+// 		fmt.Printf("%.2d:%s ", item.Priority, item.Value)
+// 	}
+// }

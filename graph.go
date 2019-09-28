@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math"
 	"strconv"
@@ -146,33 +147,46 @@ func (g *Graph) FindNode(coords Coordinate) int {
 // heap has child nodes sorted by distance
 func (g *Graph) FindPath(src, dest *Node) []Node {
 	g.lock.RLock()
-	q := NodeQueue{}
-	q.New()
-	item := QueueItem{*src, []Node{}}
-	q.Enqueue(item)
+	pqueue := make(PriorityQueue, 1)
+	rootPath := []Node{}
+	rootItem := QueueItem{*src, rootPath}
+	pqueue[0] = &Item{
+		Value:    &rootItem,
+		Priority: 0,
+		Index:    0,
+	}
+	heap.Init(&pqueue)
 	visited := make(map[*Node]bool)
 	for {
-		if q.IsEmpty() {
+		if pqueue.Len() == 0 {
 			break
 		}
-		item := q.Dequeue()
-		node := item.Node
+		pqitem := pqueue.Pop().(*Item)
+		value := pqitem.Value
+		node := value.Node
 		visited[&node] = true
-		near := g.edges[node]
+		children := g.edges[node]
 
-		for i := 0; i < len(near); i++ {
-			j := near[i]
+		for i := 0; i < len(children); i++ {
+			child := children[i]
 
-			if *j == *dest {
-				fmt.Println("Found Dest")
-				return item.Path
+			if *child == *dest {
+				fmt.Println("Found Dest with distance", pqitem.Priority)
+				return value.Path
 			}
 
-			if !visited[j] {
-				path := append(item.Path, *j)
-				item := QueueItem{*j, path}
-				q.Enqueue(item)
-				visited[j] = true
+			if !visited[child] {
+				path := append(value.Path, *child)
+				queueItem := QueueItem{*child, path}
+				dx := (node.Value[0] - child.Value[0])
+				dy := (node.Value[1] - child.Value[1])
+				distance := math.Sqrt(dx*dx + dy*dy)
+				newItem := Item{
+					Value:    &queueItem,
+					Priority: distance,
+				}
+				heap.Push(&pqueue, &newItem)
+				visited[child] = true
 			}
 		}
 	}

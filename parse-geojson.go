@@ -39,9 +39,10 @@ var graph Graph
 
 func loadGeoJSON() {
 	// GeoJSON for central london around highbury islington
-	// jsonFile, err := os.Open("./central.geojson")
-	// GeoJSON for central london around highbury islington
-	jsonFile, err := os.Open("./data/greater-london-latest.geojson")
+	jsonFile, err := os.Open("./data/central.geojson")
+	// GeoJSON for Greater London
+	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
+	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -75,7 +76,7 @@ func loadGeoJSON() {
 	}
 
 	defer jsonFile.Close()
-	fmt.Println("geojson Graph created with %d nodes", len(graph.nodes))
+	fmt.Println("geojson Graph created with", len(graph.nodes), "nodes")
 }
 
 func calculatePath(startCoords Coordinate, endCoords Coordinate) []Node {
