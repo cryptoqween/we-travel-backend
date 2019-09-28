@@ -13,15 +13,14 @@ import (
 )
 
 type PathRequestBody struct {
-	FromLocation [2]float64 `json:"fromLocation"`
-	ToLocation   [2]float64 `json:"toLocation"`
+	FromLocation Coordinate `json:"fromLocation"`
+	ToLocation   Coordinate `json:"toLocation"`
 }
 
-
 func getCoordinates(nodes []Node) []Coordinate {
-	result := make([][2]float64, len(nodes))
+	result := make([]Coordinate, len(nodes))
 	for i := 0; i < len(nodes); i++ {
-		result[i] = nodes[i].value
+		result[i] = nodes[i].Value
 	}
 	return result
 }
@@ -66,4 +65,26 @@ func main() {
 
 	fmt.Println("Listening on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
+
+	// terminate if killed
+	// go func() {
+	//     if err := server.ListenAndServe(":8080", router); err != nil {
+	// 		// handle err
+	// 		log.Fatal(err)
+	//     }
+	// }()
+
+	// // Setting up signal capturing
+	// stop := make(chan os.Signal, 1)
+	// signal.Notify(stop, os.Interrupt)
+
+	// // Waiting for SIGINT (pkill -2)
+	// <-stop
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// if err := server.Shutdown(ctx); err != nil {
+	//     // handle err
+	// }
+
 }

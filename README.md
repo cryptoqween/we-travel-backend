@@ -2,6 +2,14 @@
 
 Kiwi.com hackathon WeTravel API
 
+## Download data
+
+    http://download.geofabrik.de/europe/great-britain/england/greater-london.html
+
+Convert OSM to geojson
+
+    npx osmtogeojson file.osm > file.geojson
+
 ## Example API
 
 Install
@@ -14,13 +22,13 @@ go get -u github.com/cheekybits/genny/generic
 To build
 
 ```
-go build example-api.go
+go build *.go
 ```
 
 To run
 
 ```
-go run example-api.go
+go run *.go
 ```
 
 Tutorial:

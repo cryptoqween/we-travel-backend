@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
 )
 
 type Property struct {
@@ -36,10 +35,13 @@ type GeoJson struct {
 	Features []Feature `json:"features"`
 }
 
-var graph ItemGraph
+var graph Graph
 
 func loadGeoJSON() {
-	jsonFile, err := os.Open("./central.geojson") //GeoJSON for central london around highbury islington
+	// GeoJSON for central london around highbury islington
+	// jsonFile, err := os.Open("./central.geojson")
+	// GeoJSON for central london around highbury islington
+	jsonFile, err := os.Open("./data/greater-london-latest.geojson")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -54,17 +56,14 @@ func loadGeoJSON() {
 		hasSidewalk := geojson.Features[i].Properties.Sidewalk != "" || geojson.Features[i].Properties.Sidewalk != "none"
 		isPath := geojson.Features[i].Properties.Highway == "path"
 		isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
-		isValidAccess := !isPath || isValidPath
+		isNotPathOrIsValidPath := !isPath || isValidPath
 		isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
-		if isHighway && isLineString && hasSidewalk && isValidAccess && isLit {
+		if isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit {
 			var feature = geojson.Features[i]
 			var prev *Node
-			//fmt.Println("ID: " + feature.Properties.Highway)
 			for j := 0; j < len(feature.Geometry.Coordinates); j++ {
 				var coords = feature.Geometry.Coordinates[j]
-				var hash = strconv.FormatFloat(coords[0], 'f', -1, 64)
-				hash += strconv.FormatFloat(coords[1], 'f', -1, 64)
-				node := Node{coords}
+				node := CreateNode(coords)
 				graph.AddNode(&node)
 				if j != 0 {
 					graph.AddEdge(&node, prev)
@@ -76,7 +75,7 @@ func loadGeoJSON() {
 	}
 
 	defer jsonFile.Close()
-	fmt.Println("geojson explorer running")
+	fmt.Println("geojson Graph created with %d nodes", len(graph.nodes))
 }
 
 func calculatePath(startCoords Coordinate, endCoords Coordinate) []Node {
