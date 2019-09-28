@@ -19,14 +19,16 @@ type Property struct {
 
 type Coordinate = [2]float64
 
+type Geometry struct {
+	Type        string       `json:"type"`
+	Coordinates []Coordinate `json:"coordinates"`
+}
+
 type Feature struct {
 	Type       string   `json:"type"`
 	ID         string   `json:"id"`
 	Properties Property `json:"properties"`
-	Geometry   struct {
-		Type        string       `json:"type"`
-		Coordinates []Coordinate `json:"coordinates"`
-	} `json:"geometry"`
+	Geometry   Geometry `json:"geometry"`
 }
 
 type GeoJson struct {

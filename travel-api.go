@@ -17,27 +17,6 @@ type PathRequestBody struct {
 	ToLocation   [2]float64 `json:"toLocation"`
 }
 
-type PropertyOutput struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-}
-
-type GeometryOutput struct {
-	Type        string       `json:"type"`
-	Coordinates [][2]float64 `json:"coordinates"`
-}
-
-type FeatureOutput struct {
-	Type       string         `json:"type"`
-	ID         string         `json:"id"`
-	Properties PropertyOutput `json:"properties"`
-	Geometry   GeometryOutput `json:"geometry"`
-}
-
-type GeoJsonOutput struct {
-	Type     string          `json:"type"`
-	Features []FeatureOutput `json:"features"`
-}
 
 func getCoordinates(nodes []Node) []Coordinate {
 	result := make([][2]float64, len(nodes))
@@ -59,13 +38,13 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	nodes := calculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
 	coords := getCoordinates(nodes)
 
-	geometry := GeometryOutput{Type: "LineString", Coordinates: coords}
-	featureOut := FeatureOutput{Type: "Feature", ID: "1234", Properties: PropertyOutput{}, Geometry: geometry}
-	features := make([]FeatureOutput, 1)
+	geometry := Geometry{Type: "LineString", Coordinates: coords}
+	featureOut := Feature{Type: "Feature", ID: "1234", Properties: Property{}, Geometry: geometry}
+	features := make([]Feature, 1)
 
 	features[0] = featureOut
 
-	geojsonData := GeoJsonOutput{
+	geojsonData := GeoJson{
 		Type:     "FeatureCollection",
 		Features: features,
 	}
