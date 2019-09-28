@@ -64,28 +64,33 @@ func (g *ItemGraph) String() {
 	g.lock.RUnlock()
 }
 
+type QueueItem struct {
+	Node Node
+	Path []Node
+}
+
 type NodeQueue struct {
-	items []Node
+	items []QueueItem
 	lock  sync.RWMutex
 }
 
 // New creates a new NodeQueue
 func (s *NodeQueue) New() *NodeQueue {
 	s.lock.Lock()
-	s.items = []Node{}
+	s.items = []QueueItem{}
 	s.lock.Unlock()
 	return s
 }
 
 // Enqueue adds an Node to the end of the queue
-func (s *NodeQueue) Enqueue(t Node) {
+func (s *NodeQueue) Enqueue(t QueueItem) {
 	s.lock.Lock()
 	s.items = append(s.items, t)
 	s.lock.Unlock()
 }
 
 // Dequeue removes an Node from the start of the queue
-func (s *NodeQueue) Dequeue() *Node {
+func (s *NodeQueue) Dequeue() *QueueItem {
 	s.lock.Lock()
 	item := s.items[0]
 	s.items = s.items[1:len(s.items)]
@@ -94,7 +99,7 @@ func (s *NodeQueue) Dequeue() *Node {
 }
 
 // Front returns the item next in the queue, without removing it
-func (s *NodeQueue) Front() *Node {
+func (s *NodeQueue) Front() *QueueItem {
 	s.lock.RLock()
 	item := s.items[0]
 	s.lock.RUnlock()
@@ -117,37 +122,41 @@ func (s *NodeQueue) Size() int {
 
 // A* routing
 // heap has child nodes sorted by distance
-func (g *ItemGraph) FindPath(src, dest *Node) NodeQueue {
+func (g *ItemGraph) FindPath(src, dest *Node) []Node {
 	g.lock.RLock()
 	q := NodeQueue{}
 	q.New()
-	q.Enqueue(*src)
+	item := QueueItem{*src, []Node{}}
+	q.Enqueue(item)
 	visited := make(map[*Node]bool)
-	path := NodeQueue{}
 	for {
 		if q.IsEmpty() {
 			break
 		}
-		node := q.Dequeue()
-		visited[node] = true
-		near := g.edges[*node]
+		item := q.Dequeue()
+		node := item.Node
+		visited[&node] = true
+		near := g.edges[node]
 
 		for i := 0; i < len(near); i++ {
 			j := near[i]
 
 			if *j == *dest {
 				fmt.Println("Found Dest")
-				return path
+				return item.Path
 			}
 
 			if !visited[j] {
-				q.Enqueue(*j)
+				path := append(item.Path, *j)
+				item := QueueItem{*j, path}
+				q.Enqueue(item)
 				visited[j] = true
 			}
 		}
 	}
 	g.lock.RUnlock()
-	return path
+	// No path
+	return []Node{}
 }
 
 type Property struct {
@@ -214,7 +223,7 @@ func main() {
 			}
 		}
 	}
-	fmt.Println(graph.FindPath(graph.nodes[0], graph.nodes[3]))
+	fmt.Println(graph.FindPath(graph.nodes[0], graph.nodes[2]))
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
