@@ -7,8 +7,6 @@ import (
 	"log"
 	"net/http"
 
-	//"strconv"
-
 	"github.com/gorilla/mux"
 )
 

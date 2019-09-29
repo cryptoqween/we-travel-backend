@@ -180,7 +180,7 @@ func (g *Graph) FindPath(src, dest *Node) []Node {
 				queueItem := QueueItem{*child, path}
 				dx := (node.Value[0] - child.Value[0])
 				dy := (node.Value[1] - child.Value[1])
-				distance := math.Sqrt(dx*dx + dy*dy)
+				distance := math.Sqrt(dx*dx+dy*dy) + pqitem.Priority
 				newItem := Item{
 					Value:    &queueItem,
 					Priority: distance,
