@@ -24,6 +24,10 @@ func getCoordinates(nodes []Node) []Coordinate {
 	return result
 }
 
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
+}
+
 func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	reqBody, err := ioutil.ReadAll(r.Body)
 	var newRequestBody PathRequestBody
@@ -48,6 +52,8 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	geojsonDataInJson, _ := json.Marshal(&geojsonData)
+
+	enableCors(&w)
 	w.Write(geojsonDataInJson)
 }
 
