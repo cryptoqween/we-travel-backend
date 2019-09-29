@@ -10,7 +10,7 @@ Convert OSM to geojson
 
     npx osmtogeojson file.osm > file.geojson
 
-## Example API
+## Run API
 
 Install
 
@@ -30,6 +30,10 @@ To run
 ```
 go run *.go
 ```
+## Stack and tech
+* Choose a small area of London using http://bboxfinder.com/#51.543522,-0.103871,51.546898,-0.094215
+* Download Openstreetmap data into .osm https://wiki.openstreetmap.org/wiki/Developer_FAQ
+* Convert into geojson using https://github.com/tyrasd/osmtogeojson
 
 Tutorial:
 [API tutorial](https://medium.com/the-andela-way/build-a-restful-json-api-with-golang-85a83420c9da)
