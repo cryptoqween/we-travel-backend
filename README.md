@@ -22,7 +22,7 @@ go get -u github.com/cheekybits/genny/generic
 To build
 
 ```
-go build *.go
+go build -v -o bin/main .
 ```
 
 To run
