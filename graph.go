@@ -1,44 +1,46 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math"
+	"strconv"
 
 	//"math"
 	"sync"
-
-	"github.com/cheekybits/genny/generic"
 	//"github.com/cheekybits/genny/generic"
 )
 
-// Item the type of the binary search tree
-type Item generic.Type
-
 // Node a single node that composes the tree
 type Node struct {
-	value [2]float64
+	Value Coordinate
+}
+
+func CreateNode(coords Coordinate) Node {
+	var hash = strconv.FormatFloat(coords[0], 'f', -1, 64)
+	hash += strconv.FormatFloat(coords[1], 'f', -1, 64)
+	return Node{coords}
 }
 
 func (n *Node) String() string {
-	return fmt.Sprintf("%v", n.value)
+	return fmt.Sprintf("%v", n.Value)
 }
 
-// ItemGraph the Items graph
-type ItemGraph struct {
+type Graph struct {
 	nodes []*Node
 	edges map[Node][]*Node
 	lock  sync.RWMutex
 }
 
 // AddNode adds a node to the graph
-func (g *ItemGraph) AddNode(n *Node) {
+func (g *Graph) AddNode(n *Node) {
 	g.lock.Lock()
 	g.nodes = append(g.nodes, n)
 	g.lock.Unlock()
 }
 
 // AddEdge adds an edge to the graph
-func (g *ItemGraph) AddEdge(n1, n2 *Node) {
+func (g *Graph) AddEdge(n1, n2 *Node) {
 	g.lock.Lock()
 	if g.edges == nil {
 		g.edges = make(map[Node][]*Node)
@@ -49,7 +51,7 @@ func (g *ItemGraph) AddEdge(n1, n2 *Node) {
 }
 
 // Print graph
-func (g *ItemGraph) String() {
+func (g *Graph) String() {
 	g.lock.RLock()
 	s := ""
 	for i := 0; i < len(g.nodes); i++ {
@@ -120,7 +122,7 @@ func (s *NodeQueue) Size() int {
 	return len(s.items)
 }
 
-func (g *ItemGraph) FindNode(coords [2]float64) int {
+func (g *Graph) FindNode(coords Coordinate) int {
 	nodes := g.nodes
 	//min distance
 	var foundNodeIndex int
@@ -129,7 +131,10 @@ func (g *ItemGraph) FindNode(coords [2]float64) int {
 	// Probably there is a better algo for this, just doing the brute force sorry :(
 	for i := 0; i < len(nodes); i++ {
 		//calc distance
-		distance := math.Sqrt((coords[0]-nodes[i].value[0])*(coords[0]-nodes[i].value[0]) + (coords[1]-nodes[i].value[1])*(coords[1]-nodes[i].value[1]))
+		value := nodes[i].Value
+		dx := coords[0] - value[0]
+		dy := coords[1] - value[1]
+		distance := math.Sqrt(dx*dx + dy*dy)
 		if i == 0 || distance < minDistance {
 			foundNodeIndex = i
 			minDistance = distance
@@ -140,35 +145,48 @@ func (g *ItemGraph) FindNode(coords [2]float64) int {
 
 // A* routing
 // heap has child nodes sorted by distance
-func (g *ItemGraph) FindPath(src, dest *Node) []Node {
+func (g *Graph) FindPath(src, dest *Node) []Node {
 	g.lock.RLock()
-	q := NodeQueue{}
-	q.New()
-	item := QueueItem{*src, []Node{}}
-	q.Enqueue(item)
+	pqueue := make(PriorityQueue, 1)
+	rootPath := []Node{}
+	rootItem := QueueItem{*src, rootPath}
+	pqueue[0] = &Item{
+		Value:    &rootItem,
+		Priority: 0,
+		Index:    0,
+	}
+	heap.Init(&pqueue)
 	visited := make(map[*Node]bool)
 	for {
-		if q.IsEmpty() {
+		if pqueue.Len() == 0 {
 			break
 		}
-		item := q.Dequeue()
-		node := item.Node
+		pqitem := pqueue.Pop().(*Item)
+		value := pqitem.Value
+		node := value.Node
 		visited[&node] = true
-		near := g.edges[node]
+		children := g.edges[node]
 
-		for i := 0; i < len(near); i++ {
-			j := near[i]
+		for i := 0; i < len(children); i++ {
+			child := children[i]
 
-			if *j == *dest {
-				fmt.Println("Found Dest")
-				return item.Path
+			if *child == *dest {
+				fmt.Println("Found Dest with distance", pqitem.Priority)
+				return value.Path
 			}
 
-			if !visited[j] {
-				path := append(item.Path, *j)
-				item := QueueItem{*j, path}
-				q.Enqueue(item)
-				visited[j] = true
+			if !visited[child] {
+				path := append(value.Path, *child)
+				queueItem := QueueItem{*child, path}
+				dx := (node.Value[0] - child.Value[0])
+				dy := (node.Value[1] - child.Value[1])
+				distance := math.Sqrt(dx*dx + dy*dy)
+				newItem := Item{
+					Value:    &queueItem,
+					Priority: distance,
+				}
+				heap.Push(&pqueue, &newItem)
+				visited[child] = true
 			}
 		}
 	}

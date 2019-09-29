@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"strconv"
 )
 
 type Property struct {
@@ -19,14 +18,16 @@ type Property struct {
 
 type Coordinate = [2]float64
 
+type Geometry struct {
+	Type        string       `json:"type"`
+	Coordinates []Coordinate `json:"coordinates"`
+}
+
 type Feature struct {
 	Type       string   `json:"type"`
 	ID         string   `json:"id"`
 	Properties Property `json:"properties"`
-	Geometry   struct {
-		Type        string       `json:"type"`
-		Coordinates []Coordinate `json:"coordinates"`
-	} `json:"geometry"`
+	Geometry   Geometry `json:"geometry"`
 }
 
 type GeoJson struct {
@@ -34,10 +35,14 @@ type GeoJson struct {
 	Features []Feature `json:"features"`
 }
 
-var graph ItemGraph
+var graph Graph
 
 func loadGeoJSON() {
-	jsonFile, err := os.Open("./central.geojson") //GeoJSON for central london around highbury islington
+	// GeoJSON for central london around highbury islington
+	jsonFile, err := os.Open("./data/central.geojson")
+	// GeoJSON for Greater London
+	// from http://download.geofabrik.de/europe/great-britain/england/greater-london.html
+	// jsonFile, err := os.Open("./data/greater-london-latest.geojson")
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -52,17 +57,14 @@ func loadGeoJSON() {
 		hasSidewalk := geojson.Features[i].Properties.Sidewalk != "" || geojson.Features[i].Properties.Sidewalk != "none"
 		isPath := geojson.Features[i].Properties.Highway == "path"
 		isValidPath := geojson.Features[i].Properties.Highway == "path" && (geojson.Features[i].Properties.Access == "no" || geojson.Features[i].Properties.Access == "private")
-		isValidAccess := !isPath || isValidPath
+		isNotPathOrIsValidPath := !isPath || isValidPath
 		isLit := geojson.Features[i].Properties.Lit != "" || geojson.Features[i].Properties.Lit == "yes"
-		if isHighway && isLineString && hasSidewalk && isValidAccess && isLit {
+		if isHighway && isLineString && hasSidewalk && isNotPathOrIsValidPath && isLit {
 			var feature = geojson.Features[i]
 			var prev *Node
-			//fmt.Println("ID: " + feature.Properties.Highway)
 			for j := 0; j < len(feature.Geometry.Coordinates); j++ {
 				var coords = feature.Geometry.Coordinates[j]
-				var hash = strconv.FormatFloat(coords[0], 'f', -1, 64)
-				hash += strconv.FormatFloat(coords[1], 'f', -1, 64)
-				node := Node{coords}
+				node := CreateNode(coords)
 				graph.AddNode(&node)
 				if j != 0 {
 					graph.AddEdge(&node, prev)
@@ -74,10 +76,10 @@ func loadGeoJSON() {
 	}
 
 	defer jsonFile.Close()
-	fmt.Println("geojson explorer running")
+	fmt.Println("geojson Graph created with", len(graph.nodes), "nodes")
 }
 
-func calculatePath(startCoords [2]float64, endCoords [2]float64) []Node {
+func calculatePath(startCoords Coordinate, endCoords Coordinate) []Node {
 	nodeStart := graph.FindNode(startCoords)
 	nodeEnd := graph.FindNode(endCoords)
 	pathFound := graph.FindPath(graph.nodes[nodeStart], graph.nodes[nodeEnd])
