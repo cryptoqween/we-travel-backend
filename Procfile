@@ -1,1 +1,1 @@
-web: ./graph
+web: ./main
