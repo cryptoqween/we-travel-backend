@@ -6,8 +6,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	//"strconv"
+	"os"
 
 	"github.com/gorilla/mux"
 )
@@ -59,12 +58,17 @@ func homeLink(w http.ResponseWriter, r *http.Request) {
 func main() {
 	loadGeoJSON()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink)
 	router.HandleFunc("/findpath", findpathHandler).Methods("POST")
 
-	fmt.Println("Listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	fmt.Println("Listening on http://localhost:" + port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
 
 	// terminate if killed
 	// go func() {
