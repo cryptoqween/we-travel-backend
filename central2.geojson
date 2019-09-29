@@ -1,8 +1,0 @@
-{
-  "type": "FeatureCollection",
-  "features": [
-    {"a": 1}
-  ],
-  "blah": {"id": 1}
-
-}

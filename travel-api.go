@@ -6,43 +6,20 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	//"strconv"
+	"os"
 
 	"github.com/gorilla/mux"
 )
 
 type PathRequestBody struct {
-	FromLocation [2]float64 `json:"fromLocation"`
-	ToLocation   [2]float64 `json:"toLocation"`
-}
-
-type PropertyOutput struct {
-	ID   string `json:"id"`
-	Type string `json:"type"`
-}
-
-type GeometryOutput struct {
-	Type        string       `json:"type"`
-	Coordinates [][2]float64 `json:"coordinates"`
-}
-
-type FeatureOutput struct {
-	Type       string         `json:"type"`
-	ID         string         `json:"id"`
-	Properties PropertyOutput `json:"properties"`
-	Geometry   GeometryOutput `json:"geometry"`
-}
-
-type GeoJsonOutput struct {
-	Type     string          `json:"type"`
-	Features []FeatureOutput `json:"features"`
+	FromLocation Coordinate `json:"fromLocation"`
+	ToLocation   Coordinate `json:"toLocation"`
 }
 
 func getCoordinates(nodes []Node) []Coordinate {
-	result := make([][2]float64, len(nodes))
+	result := make([]Coordinate, len(nodes))
 	for i := 0; i < len(nodes); i++ {
-		result[i] = nodes[i].value
+		result[i] = nodes[i].Value
 	}
 	return result
 }
@@ -59,13 +36,13 @@ func findpathHandler(w http.ResponseWriter, r *http.Request) {
 	nodes := calculatePath(newRequestBody.FromLocation, newRequestBody.ToLocation)
 	coords := getCoordinates(nodes)
 
-	geometry := GeometryOutput{Type: "LineString", Coordinates: coords}
-	featureOut := FeatureOutput{Type: "Feature", ID: "1234", Properties: PropertyOutput{}, Geometry: geometry}
-	features := make([]FeatureOutput, 1)
+	geometry := Geometry{Type: "LineString", Coordinates: coords}
+	featureOut := Feature{Type: "Feature", ID: "1234", Properties: Property{}, Geometry: geometry}
+	features := make([]Feature, 1)
 
 	features[0] = featureOut
 
-	geojsonData := GeoJsonOutput{
+	geojsonData := GeoJson{
 		Type:     "FeatureCollection",
 		Features: features,
 	}
@@ -81,10 +58,37 @@ func homeLink(w http.ResponseWriter, r *http.Request) {
 func main() {
 	loadGeoJSON()
 
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+
 	router := mux.NewRouter().StrictSlash(true)
 	router.HandleFunc("/", homeLink)
 	router.HandleFunc("/findpath", findpathHandler).Methods("POST")
 
-	fmt.Println("Listening on http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", router))
+	fmt.Println("Listening on http://localhost:" + port)
+	log.Fatal(http.ListenAndServe(":"+port, router))
+
+	// terminate if killed
+	// go func() {
+	//     if err := server.ListenAndServe(":8080", router); err != nil {
+	// 		// handle err
+	// 		log.Fatal(err)
+	//     }
+	// }()
+
+	// // Setting up signal capturing
+	// stop := make(chan os.Signal, 1)
+	// signal.Notify(stop, os.Interrupt)
+
+	// // Waiting for SIGINT (pkill -2)
+	// <-stop
+
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	// if err := server.Shutdown(ctx); err != nil {
+	//     // handle err
+	// }
+
 }
