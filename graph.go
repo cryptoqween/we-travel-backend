@@ -180,10 +180,13 @@ func (g *Graph) FindPath(src, dest *Node) []Node {
 				queueItem := QueueItem{*child, path}
 				dx := (node.Value[0] - child.Value[0])
 				dy := (node.Value[1] - child.Value[1])
-				distance := math.Sqrt(dx*dx+dy*dy) + pqitem.Priority
+				remaingDx := (dest.Value[0] - child.Value[0])
+				remainingDy := (dest.Value[1] - child.Value[1])
+				remaining := math.Sqrt(remaingDx*remaingDx + remainingDy*remainingDy)
+				elapsed := math.Sqrt(dx*dx+dy*dy) + pqitem.Priority
 				newItem := Item{
 					Value:    &queueItem,
-					Priority: distance,
+					Priority: elapsed + remaining,
 				}
 				heap.Push(&pqueue, &newItem)
 				visited[child] = true
